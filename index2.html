@@ -413,233 +413,143 @@
         </div>
     </div>
     
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Country flags mapping
-        const countryFlags = {
-            'France': '🇫🇷',
-            'Netherlands': '🇳🇱',
-            'Belgium': '🇧🇪',
-            'Spain': '🇪🇸',
-            'Italy': '🇮🇹',
-            'Luxembourg': '🇱🇺',
-            'Unknown': '🌍'
-        };
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Configuration - Change this when using ngrok
+    const API_BASE_URL = 'http://localhost:8080';
+    
+    // Country flags mapping
+    const countryFlags = {
+        'France': '🇫🇷',
+        'Netherlands': '🇳🇱',
+        'Belgium': '🇧🇪',
+        'Spain': '🇪🇸',
+        'Italy': '🇮🇹',
+        'Luxembourg': '🇱🇺',
+        'Unknown': '🌍'
+    };
 
-        // Fetch checkout logs
-        async function fetchCheckoutLogs() {
-            try {
-                document.getElementById('loading-indicator').style.display = 'block';
-                document.getElementById('error-container').style.display = 'none';
-                document.getElementById('no-data-message').style.display = 'none';
-                
-                const response = await fetch('/api/checkout/all');
-                if (!response.ok) {
-                    throw new Error(`HTTP error ${response.status}: ${await response.text()}`);
-                }
-                
-                const logs = await response.json();
-                console.log("Fetched logs:", logs.length);
-                
-                document.getElementById('loading-indicator').style.display = 'none';
-                
-                if (logs.length === 0) {
-                    document.getElementById('no-data-message').style.display = 'block';
-                    return;
-                }
-                
-                // Group logs by country
-                const logsByCountry = {};
-                
-                logs.forEach(log => {
-                    const country = log.country || 'Unknown';
-                    
-                    if (!logsByCountry[country]) {
-                        logsByCountry[country] = [];
-                    }
-                    
-                    logsByCountry[country].push(log);
-                });
-                
-                displayCountrySections(logsByCountry);
-                
-                // Update last updated time
-                const now = new Date();
-                document.getElementById('last-updated').textContent = `Last updated: ${now.toLocaleString()}`;
-            } catch (error) {
-                console.error('Error fetching checkout logs:', error);
-                document.getElementById('loading-indicator').style.display = 'none';
-                document.getElementById('error-container').style.display = 'block';
-                document.getElementById('error-message').textContent = `Error loading checkout data: ${error.message}`;
+    // Fetch checkout logs
+    async function fetchCheckoutLogs() {
+        try {
+            document.getElementById('loading-indicator').style.display = 'block';
+            document.getElementById('error-container').style.display = 'none';
+            document.getElementById('no-data-message').style.display = 'none';
+            
+            const response = await fetch(`${API_BASE_URL}/api/checkout/all`);
+            if (!response.ok) {
+                throw new Error(`HTTP error ${response.status}: ${await response.text()}`);
             }
-        }
-        
-        // Display country sections with checkout logs
-        function displayCountrySections(logsByCountry) {
-            const container = document.getElementById('countries-container');
-            container.innerHTML = '';
             
-            // Sort countries alphabetically
-            const sortedCountries = Object.keys(logsByCountry).sort();
+            const logs = await response.json();
+            console.log("Fetched logs:", logs.length);
             
-            sortedCountries.forEach(country => {
-                const logs = logsByCountry[country];
-                const countryFlag = countryFlags[country] || '🌍';
-                
-                // Create country section
-                const countrySection = document.createElement('div');
-                countrySection.className = 'country-section';
-                countrySection.innerHTML = `
-                    <div class="country-header">
-                        <h2>${countryFlag} ${country} (${logs.length})</h2>
-                    </div>
-                    <div class="row country-logs" id="country-${country.toLowerCase().replace(' ', '-')}">
-                        <!-- Logs will be inserted here -->
-                    </div>
-                `;
-                
-                container.appendChild(countrySection);
-                
-                // Add logs to country section
-                const logsContainer = document.getElementById(`country-${country.toLowerCase().replace(' ', '-')}`);
-                displayCheckoutLogs(logs, logsContainer);
-            });
-        }
-        
-        // Display checkout logs
-        function displayCheckoutLogs(logs, container) {
+            document.getElementById('loading-indicator').style.display = 'none';
+            
+            if (logs.length === 0) {
+                document.getElementById('no-data-message').style.display = 'block';
+                return;
+            }
+            
+            // Group logs by country
+            const logsByCountry = {};
+            
             logs.forEach(log => {
-                // Fixed screenshot handling
-                let screenshotsHtml = '';
-                if (log.screenshots && log.screenshots.length > 0) {
-                    screenshotsHtml = '<div class="mt-3"><strong>Screenshots:</strong><div class="d-flex flex-wrap">';
-                    log.screenshots.forEach(screenshot => {
-                        // Use the correct path format based on what's available in the log
-                        let screenshotPath;
-                        
-                        // If screenshot is already a full path
-                        if (screenshot.includes('/')) {
-                            screenshotPath = `/screenshots/${screenshot}`;
-                        }
-                        // If we have country and opcode
-                        else if (log.country && log.opcode) {
-                            screenshotPath = `/screenshots/${log.country}/${log.opcode}/screenshots/${screenshot}`;
-                        }
-                        // If we have country and product_id
-                        else if (log.country && log.product_id) {
-                            screenshotPath = `/screenshots/${log.country}/${log.product_id}/${screenshot}`;
-                        }
-                        // Fallback
-                        else {
-                            screenshotPath = `/screenshots/${screenshot}`;
-                        }
-                        
-                        screenshotsHtml += `
-                            <img src="${screenshotPath}" 
-                                 class="screenshot-thumbnail" 
-                                 alt="${screenshot}"
-                                 onerror="this.onerror=null; this.src='/api/placeholder/100/75'; this.alt='Image not found'"
-                                 onclick="openScreenshotModal('${screenshotPath}', '${screenshot}')">
-                        `;
-                    });
-                    screenshotsHtml += '</div></div>';
-                }
-
-                const success = log.success === true;
-                const cardClass = success ? 'card-success' : 'card-failure';
+                const country = log.country || 'Unknown';
                 
-                // Format timestamp for display
-                let displayTimestamp = log.timestamp || 'Unknown';
-                try {
-                    if (displayTimestamp.includes('_')) {
-                        const parts = displayTimestamp.split('_');
-                        if (parts.length >= 2) {
-                            const date = parts[0];
-                            const time = parts[1];
-                            displayTimestamp = `${date.substring(0, 4)}-${date.substring(4, 6)}-${date.substring(6, 8)} ${time.substring(0, 2)}:${time.substring(2, 4)}:${time.substring(4, 6)}`;
-                        }
-                    }
-                } catch (e) {
-                    console.error('Error formatting timestamp:', e);
+                if (!logsByCountry[country]) {
+                    logsByCountry[country] = [];
                 }
                 
-                // Use opcode if available, otherwise product ID
-                const productId = log.product_id || 'Unknown';
-                const opcode = log.opcode || productId;
-
-                const logCard = document.createElement('div');
-                logCard.className = 'col-md-6 col-lg-4 checkout-card';
-                logCard.setAttribute('data-product-id', productId);
-                logCard.setAttribute('data-opcode', opcode);
-                logCard.setAttribute('data-status', success ? 'success' : 'failure');
-
-                logCard.innerHTML = `
-                    <div class="card h-100 ${cardClass}">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <h5 class="card-title mb-0">Opcode: ${opcode}</h5>
-                            <span class="badge ${success ? 'bg-success' : 'bg-danger'}">
-                                ${success ? 'Success' : 'Failed'}
-                            </span>
-                        </div>
-                        <div class="card-body">
-                            <p class="card-text">
-                                <strong>Product ID:</strong> ${productId}<br>
-                                <strong>Timestamp:</strong> ${displayTimestamp}<br>
-                                <strong>URL:</strong> <span class="text-truncate d-inline-block" style="max-width: 100%;">${log.url || 'N/A'}</span>
-                            </p>
-                            ${screenshotsHtml}
-                            <button class="btn btn-sm btn-outline-primary mt-3" onclick="viewLogDetails(${JSON.stringify(log).replace(/"/g, '&quot;')})">
-                                View Details
-                            </button>
-                        </div>
-                    </div>
-                `;
-                
-                container.appendChild(logCard);
+                logsByCountry[country].push(log);
             });
+            
+            displayCountrySections(logsByCountry);
+            
+            // Update last updated time
+            const now = new Date();
+            document.getElementById('last-updated').textContent = `Last updated: ${now.toLocaleString()}`;
+        } catch (error) {
+            console.error('Error fetching checkout logs:', error);
+            document.getElementById('loading-indicator').style.display = 'none';
+            document.getElementById('error-container').style.display = 'block';
+            document.getElementById('error-message').textContent = `Error loading checkout data: ${error.message}`;
         }
+    }
+    
+    // Display country sections with checkout logs
+    function displayCountrySections(logsByCountry) {
+        const container = document.getElementById('countries-container');
+        container.innerHTML = '';
         
-        // Open screenshot modal
-        function openScreenshotModal(src, filename) {
-            document.getElementById('modal-screenshot').src = src;
-            document.getElementById('screenshotModalLabel').textContent = filename;
-            
-            // Add error handling for the modal image
-            document.getElementById('modal-screenshot').onerror = function() {
-                this.onerror = null;
-                this.src = '/api/placeholder/800/600';
-                this.alt = 'Image not found';
-            };
-            
-            const modal = new bootstrap.Modal(document.getElementById('screenshotModal'));
-            modal.show();
-        }
+        // Sort countries alphabetically
+        const sortedCountries = Object.keys(logsByCountry).sort();
         
-        // Display log details in modal
-        function viewLogDetails(log) {
-            const modalContent = document.getElementById('log-modal-content');
+        sortedCountries.forEach(country => {
+            const logs = logsByCountry[country];
+            const countryFlag = countryFlags[country] || '🌍';
             
-            let logContentHtml = '<div class="log-content">';
+            // Create country section
+            const countrySection = document.createElement('div');
+            countrySection.className = 'country-section';
+            countrySection.innerHTML = `
+                <div class="country-header">
+                    <h2>${countryFlag} ${country} (${logs.length})</h2>
+                </div>
+                <div class="row country-logs" id="country-${country.toLowerCase().replace(' ', '-')}">
+                    <!-- Logs will be inserted here -->
+                </div>
+            `;
             
-            if (log.content && Array.isArray(log.content)) {
-                logContentHtml += '<h6>Log Entries:</h6>';
-                
-                log.content.forEach(entry => {
-                    const entryType = entry.type || 'info';
-                    const cssClass = `log-${entryType}`;
+            container.appendChild(countrySection);
+            
+            // Add logs to country section
+            const logsContainer = document.getElementById(`country-${country.toLowerCase().replace(' ', '-')}`);
+            displayCheckoutLogs(logs, logsContainer);
+        });
+    }
+    
+    // Display checkout logs
+    function displayCheckoutLogs(logs, container) {
+        logs.forEach(log => {
+            // Fixed screenshot handling
+            let screenshotsHtml = '';
+            if (log.screenshots && log.screenshots.length > 0) {
+                screenshotsHtml = '<div class="mt-3"><strong>Screenshots:</strong><div class="d-flex flex-wrap">';
+                log.screenshots.forEach(screenshot => {
+                    // Use the correct path format based on what's available in the log
+                    let screenshotPath;
                     
-                    logContentHtml += `
-                        <div class="log-entry ${cssClass}">
-                            <strong>${entry.timestamp || ''}</strong>
-                            <span>${entry.message || ''}</span>
-                        </div>
+                    // If screenshot is already a full path
+                    if (screenshot.includes('/')) {
+                        screenshotPath = `${API_BASE_URL}/screenshots/${screenshot}`;
+                    }
+                    // If we have country and opcode
+                    else if (log.country && log.opcode) {
+                        screenshotPath = `${API_BASE_URL}/screenshots/${log.country}/${log.opcode}/screenshots/${screenshot}`;
+                    }
+                    // If we have country and product_id
+                    else if (log.country && log.product_id) {
+                        screenshotPath = `${API_BASE_URL}/screenshots/${log.country}/${log.product_id}/${screenshot}`;
+                    }
+                    // Fallback
+                    else {
+                        screenshotPath = `${API_BASE_URL}/screenshots/${screenshot}`;
+                    }
+                    
+                    screenshotsHtml += `
+                        <img src="${screenshotPath}" 
+                             class="screenshot-thumbnail" 
+                             alt="${screenshot}"
+                             onerror="this.onerror=null; this.src='${API_BASE_URL}/api/placeholder/100/75'; this.alt='Image not found'"
+                             onclick="openScreenshotModal('${screenshotPath}', '${screenshot}')">
                     `;
                 });
-            } else {
-                logContentHtml += `<p>No detailed log content available</p>`;
+                screenshotsHtml += '</div></div>';
             }
-            
-            logContentHtml += '</div>';
+
+            const success = log.success === true;
+            const cardClass = success ? 'card-success' : 'card-failure';
             
             // Format timestamp for display
             let displayTimestamp = log.timestamp || 'Unknown';
@@ -659,83 +569,178 @@
             // Use opcode if available, otherwise product ID
             const productId = log.product_id || 'Unknown';
             const opcode = log.opcode || productId;
-            
-            modalContent.innerHTML = `
-                <h6>Product ID: ${productId}</h6>
-                <h6>Opcode: ${opcode}</h6>
-                <h6>Status: <span class="badge ${log.success ? 'bg-success' : 'bg-danger'}">${log.success ? 'Success' : 'Failed'}</span></h6>
-                <h6>URL: ${log.url || 'N/A'}</h6>
-                <h6>Timestamp: ${displayTimestamp}</h6>
-                <hr>
-                ${logContentHtml}
+
+            const logCard = document.createElement('div');
+            logCard.className = 'col-md-6 col-lg-4 checkout-card';
+            logCard.setAttribute('data-product-id', productId);
+            logCard.setAttribute('data-opcode', opcode);
+            logCard.setAttribute('data-status', success ? 'success' : 'failure');
+
+            logCard.innerHTML = `
+                <div class="card h-100 ${cardClass}">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Opcode: ${opcode}</h5>
+                        <span class="badge ${success ? 'bg-success' : 'bg-danger'}">
+                            ${success ? 'Success' : 'Failed'}
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            <strong>Product ID:</strong> ${productId}<br>
+                            <strong>Timestamp:</strong> ${displayTimestamp}<br>
+                            <strong>URL:</strong> <span class="text-truncate d-inline-block" style="max-width: 100%;">${log.url || 'N/A'}</span>
+                        </p>
+                        ${screenshotsHtml}
+                        <button class="btn btn-sm btn-outline-primary mt-3" onclick="viewLogDetails(${JSON.stringify(log).replace(/"/g, '&quot;')})">
+                            View Details
+                        </button>
+                    </div>
+                </div>
             `;
             
-            const modal = new bootstrap.Modal(document.getElementById('logModal'));
-            modal.show();
+            container.appendChild(logCard);
+        });
+    }
+    
+    // Open screenshot modal
+    function openScreenshotModal(src, filename) {
+        document.getElementById('modal-screenshot').src = src;
+        document.getElementById('screenshotModalLabel').textContent = filename;
+        
+        // Add error handling for the modal image
+        document.getElementById('modal-screenshot').onerror = function() {
+            this.onerror = null;
+            this.src = `${API_BASE_URL}/api/placeholder/800/600`;
+            this.alt = 'Image not found';
+        };
+        
+        const modal = new bootstrap.Modal(document.getElementById('screenshotModal'));
+        modal.show();
+    }
+    
+    // Display log details in modal
+    function viewLogDetails(log) {
+        const modalContent = document.getElementById('log-modal-content');
+        
+        let logContentHtml = '<div class="log-content">';
+        
+        if (log.content && Array.isArray(log.content)) {
+            logContentHtml += '<h6>Log Entries:</h6>';
+            
+            log.content.forEach(entry => {
+                const entryType = entry.type || 'info';
+                const cssClass = `log-${entryType}`;
+                
+                logContentHtml += `
+                    <div class="log-entry ${cssClass}">
+                        <strong>${entry.timestamp || ''}</strong>
+                        <span>${entry.message || ''}</span>
+                    </div>
+                `;
+            });
+        } else {
+            logContentHtml += `<p>No detailed log content available</p>`;
         }
         
-        // Search functionality - include search by opcode
-        document.getElementById('search-input').addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
+        logContentHtml += '</div>';
+        
+        // Format timestamp for display
+        let displayTimestamp = log.timestamp || 'Unknown';
+        try {
+            if (displayTimestamp.includes('_')) {
+                const parts = displayTimestamp.split('_');
+                if (parts.length >= 2) {
+                    const date = parts[0];
+                    const time = parts[1];
+                    displayTimestamp = `${date.substring(0, 4)}-${date.substring(4, 6)}-${date.substring(6, 8)} ${time.substring(0, 2)}:${time.substring(2, 4)}:${time.substring(4, 6)}`;
+                }
+            }
+        } catch (e) {
+            console.error('Error formatting timestamp:', e);
+        }
+        
+        // Use opcode if available, otherwise product ID
+        const productId = log.product_id || 'Unknown';
+        const opcode = log.opcode || productId;
+        
+        modalContent.innerHTML = `
+            <h6>Product ID: ${productId}</h6>
+            <h6>Opcode: ${opcode}</h6>
+            <h6>Status: <span class="badge ${log.success ? 'bg-success' : 'bg-danger'}">${log.success ? 'Success' : 'Failed'}</span></h6>
+            <h6>URL: ${log.url || 'N/A'}</h6>
+            <h6>Timestamp: ${displayTimestamp}</h6>
+            <hr>
+            ${logContentHtml}
+        `;
+        
+        const modal = new bootstrap.Modal(document.getElementById('logModal'));
+        modal.show();
+    }
+    
+    // Search functionality - include search by opcode
+    document.getElementById('search-input').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const checkoutCards = document.querySelectorAll('.checkout-card');
+        
+        checkoutCards.forEach(card => {
+            const productId = card.getAttribute('data-product-id').toLowerCase();
+            const opcode = card.getAttribute('data-opcode').toLowerCase();
+            
+            if (productId.includes(searchTerm) || opcode.includes(searchTerm)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
+    
+    // Filter functionality
+    document.querySelectorAll('[data-filter]').forEach(button => {
+        button.addEventListener('click', function() {
+            // Update active button
+            document.querySelectorAll('[data-filter]').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            this.classList.add('active');
+            
+            const filter = this.getAttribute('data-filter');
             const checkoutCards = document.querySelectorAll('.checkout-card');
             
             checkoutCards.forEach(card => {
-                const productId = card.getAttribute('data-product-id').toLowerCase();
-                const opcode = card.getAttribute('data-opcode').toLowerCase();
-                
-                if (productId.includes(searchTerm) || opcode.includes(searchTerm)) {
+                if (filter === 'all' || card.getAttribute('data-status') === filter) {
                     card.style.display = 'block';
                 } else {
                     card.style.display = 'none';
                 }
             });
         });
-        
-        // Filter functionality
-        document.querySelectorAll('[data-filter]').forEach(button => {
-            button.addEventListener('click', function() {
-                // Update active button
-                document.querySelectorAll('[data-filter]').forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                this.classList.add('active');
-                
-                const filter = this.getAttribute('data-filter');
-                const checkoutCards = document.querySelectorAll('.checkout-card');
-                
-                checkoutCards.forEach(card => {
-                    if (filter === 'all' || card.getAttribute('data-status') === filter) {
-                        card.style.display = 'block';
-                    } else {
-                        card.style.display = 'none';
-                    }
-                });
-            });
-        });
-        
-        // Add "go back to top" button
-        const backToTopBtn = document.createElement('button');
-        backToTopBtn.className = 'btn btn-primary position-fixed bottom-0 end-0 m-4';
-        backToTopBtn.style.zIndex = 1000;
-        backToTopBtn.innerHTML = '<i class="bi bi-arrow-up"></i>';
-        backToTopBtn.style.display = 'none';
-        backToTopBtn.onclick = () => window.scrollTo({top: 0, behavior: 'smooth'});
-        document.body.appendChild(backToTopBtn);
-        
-        // Show/hide back to top button
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 300) {
-                backToTopBtn.style.display = 'block';
-            } else {
-                backToTopBtn.style.display = 'none';
-            }
-        });
-        
-        // Initial load
+    });
+    
+    // Add "go back to top" button
+    const backToTopBtn = document.createElement('button');
+    backToTopBtn.className = 'btn btn-primary position-fixed bottom-0 end-0 m-4';
+    backToTopBtn.style.zIndex = 1000;
+    backToTopBtn.innerHTML = '<i class="bi bi-arrow-up"></i>';
+    backToTopBtn.style.display = 'none';
+    backToTopBtn.onclick = () => window.scrollTo({top: 0, behavior: 'smooth'});
+    document.body.appendChild(backToTopBtn);
+    
+    // Show/hide back to top button
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 300) {
+            backToTopBtn.style.display = 'block';
+        } else {
+            backToTopBtn.style.display = 'none';
+        }
+    });
+    
+    // Initial load
+    document.addEventListener('DOMContentLoaded', function() {
         fetchCheckoutLogs();
         
         // Refresh every 5 minutes
         setInterval(fetchCheckoutLogs, 5 * 60 * 1000);
-    </script>
+    });
+</script>
 </body>
 </html>
