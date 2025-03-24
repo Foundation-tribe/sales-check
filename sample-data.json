@@ -1,0 +1,20 @@
+[
+  {
+    "country": "France",
+    "product_id": "79723752",
+    "opcode": "WMF152",
+    "timestamp": "20250322_152830",
+    "url": "https://www.veepee.fr/gr/catalog/123456",
+    "success": true,
+    "screenshots": ["sample1.png", "sample2.png"]
+  },
+  {
+    "country": "Italy",
+    "product_id": "80489948",
+    "opcode": "WMF153",
+    "timestamp": "20250322_160501",
+    "url": "https://www.veepee.it/gr/catalog/654321",
+    "success": false,
+    "screenshots": ["sample3.png", "sample4.png"]
+  }
+]
