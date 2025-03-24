@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veepee Checkout Status Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary-color: #ff4f9a;
+            --primary-light: #ff8ec2;
+            --primary-dark: #d13c7b;
+            --secondary-color: #7a28cb;
+            --light-color: #ffffff;
+            --gray-color: #f8f9fa;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+        }
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--gray-color);
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* Subtle animated background */
+        body:before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(125deg, rgba(255,79,154,0.05) 0%, rgba(255,255,255,0) 40%),
+                         linear-gradient(225deg, rgba(122,40,203,0.05) 0%, rgba(255,255,255,0) 40%);
+            z-index: -1;
+        }
+        
+        /* Floating background shapes */
+        .shape {
+            position: fixed;
+            background: var(--primary-light);
+            opacity: 0.1;
+            border-radius: 50%;
+            filter: blur(40px);
+            z-index: -1;
+        }
+        
+        .shape:nth-child(1) {
+            width: 300px;
+            height: 300px;
+            top: -150px;
+            right: -50px;
+            animation: float 15s infinite ease-in-out;
+        }
+        
+        .shape:nth-child(2) {
+            width: 200px;
+            height: 200px;
+            bottom: -100px;
+            left: -50px;
+            background: var(--secondary-color);
+            animation: float 15s infinite ease-in-out 3s;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+            100% { transform: translateY(0) rotate(0deg); }
+        }
+        
+        .banner {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .banner:before {
+            content: "";
+            position: absolute;
+            top: -10%;
+            right: -10%;
+            width: 300px;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+        
+        .banner h1 {
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        
+        .country-section {
+            background-color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.02);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .country-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+        }
+        
+        .country-header {
+            border-bottom: 2px solid var(--gray-color);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .country-header:after {
+            content: "";
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 60px;
+            height: 2px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        }
+        
+        .checkout-card {
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+        
+        .checkout-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+        }
+        
+        .card {
+            border-radius: 12px;
+            border: none;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        
+        .card-header {
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            background-color: white;
+            padding: 15px 20px;
+        }
+        
+        .card-success {
+            border-left: 5px solid var(--success-color);
+        }
+        
+        .card-failure {
+            border-left: 5px solid var(--danger-color);
+        }
+        
+        .screenshot-thumbnail {
+            width: 100px;
+            height: 75px;
+            object-fit: cover;
+            cursor: pointer;
+            margin: 5px;
+            border-radius: 8px;
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .screenshot-thumbnail:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .modal-img {
+            max-width: 100%;
+            border-radius: 8px;
+        }
+        
+        .log-entry {
+            padding: 8px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+        }
+        
+        .log-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .log-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .log-warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .log-error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .nav-pills .nav-link {
+            border-radius: 30px;
+            padding: 10px 20px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 15px;
+        }
+        
+        .nav-pills .nav-link.active {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            box-shadow: 0 4px 15px rgba(255, 79, 154, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .search-container {
+            margin-bottom: 20px;
+        }
+        
+        .input-group {
+            border-radius: 30px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        
+        .input-group-text {
+            border: none;
+            background-color: white;
+            color: var(--primary-color);
+        }
+        
+        .form-control {
+            border: none;
+            padding: 12px 20px;
+        }
+        
+        .form-control:focus {
+            box-shadow: none;
+        }
+        
+        .btn-group {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border-radius: 30px;
+            overflow: hidden;
+        }
+        
+        .btn-outline-primary {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        .btn-outline-primary:hover, .btn-outline-primary.active {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-outline-success {
+            border-color: var(--success-color);
+            color: var(--success-color);
+        }
+        
+        .btn-outline-success:hover, .btn-outline-success.active {
+            background-color: var(--success-color);
+            border-color: var(--success-color);
+        }
+        
+        .btn-outline-danger {
+            border-color: var(--danger-color);
+            color: var(--danger-color);
+        }
+        
+        .btn-outline-danger:hover, .btn-outline-danger.active {
+            background-color: var(--danger-color);
+            border-color: var(--danger-color);
+        }
+        
+        .badge {
+            padding: 8px 12px;
+            border-radius: 30px;
+            font-weight: 500;
+            font-size: 12px;
+        }
+        
+        .spinner-border {
+            color: var(--primary-color);
+        }
+        
+        .modal-content {
+            border-radius: 15px;
+            border: none;
+            overflow: hidden;
+        }
+        
+        .modal-header {
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+        }
+        
+        .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background Shapes -->
+    <div class="shape"></div>
+    <div class="shape"></div>
+    
+    <div class="banner">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1><i class="bi bi-cart-check-fill"></i> Veepee Checkout Status Dashboard</h1>
+                <div id="last-updated" class="text-white"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container mb-5">
+        <!-- Navigation -->
+        <ul class="nav nav-pills mb-4">
+            <li class="nav-item">
+                <a class="nav-link" href="/">Product Availability</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" href="/checkout">Checkout Status</a>
+            </li>
+        </ul>
+        
+        <!-- Search and Filter -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="search-container">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" id="search-input" class="form-control" placeholder="Search by product ID...">
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex justify-content-end">
+                    <div class="btn-group">
+                        <button class="btn btn-outline-primary active" data-filter="all">All</button>
+                        <button class="btn btn-outline-success" data-filter="success">Success</button>
+                        <button class="btn btn-outline-danger" data-filter="failure">Failure</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Loading Indicator -->
+        <div id="loading-indicator" class="text-center py-5">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading checkout data...</p>
+        </div>
+        
+        <!-- Error Container -->
+        <div id="error-container" class="alert alert-danger" style="display: none;">
+            <i class="bi bi-exclamation-triangle-fill"></i> <span id="error-message"></span>
+        </div>
+        
+        <!-- No Data Message -->
+        <div id="no-data-message" class="alert alert-info" style="display: none;">
+            <i class="bi bi-info-circle-fill"></i> No checkout data found. Make sure you've run the checkout process and generated logs.
+        </div>
+        
+        <!-- Countries Container -->
+        <div id="countries-container">
+            <!-- Country sections will be dynamically inserted here -->
+        </div>
+    </div>
+    
+    <!-- Modal for displaying screenshots -->
+    <div class="modal fade" id="screenshotModal" tabindex="-1" aria-labelledby="screenshotModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="screenshotModalLabel">Screenshot</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img src="" id="modal-screenshot" class="modal-img">
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal for viewing log details -->
+    <div class="modal fade" id="logModal" tabindex="-1" aria-labelledby="logModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="logModalLabel">Checkout Log Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="log-modal-content">
+                    <!-- Log content will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Country flags mapping
+        const countryFlags = {
+            'France': '🇫🇷',
+            'Netherlands': '🇳🇱',
+            'Belgium': '🇧🇪',
+            'Spain': '🇪🇸',
+            'Italy': '🇮🇹',
+            'Luxembourg': '🇱🇺',
+            'Unknown': '🌍'
+        };
+
+        // Fetch checkout logs
+        async function fetchCheckoutLogs() {
+            try {
+                document.getElementById('loading-indicator').style.display = 'block';
+                document.getElementById('error-container').style.display = 'none';
+                document.getElementById('no-data-message').style.display = 'none';
+                
+                const response = await fetch('/api/checkout/all');
+                if (!response.ok) {
+                    throw new Error(`HTTP error ${response.status}: ${await response.text()}`);
+                }
+                
+                const logs = await response.json();
+                console.log("Fetched logs:", logs.length);
+                
+                document.getElementById('loading-indicator').style.display = 'none';
+                
+                if (logs.length === 0) {
+                    document.getElementById('no-data-message').style.display = 'block';
+                    return;
+                }
+                
+                // Group logs by country
+                const logsByCountry = {};
+                
+                logs.forEach(log => {
+                    const country = log.country || 'Unknown';
+                    
+                    if (!logsByCountry[country]) {
+                        logsByCountry[country] = [];
+                    }
+                    
+                    logsByCountry[country].push(log);
+                });
+                
+                displayCountrySections(logsByCountry);
+                
+                // Update last updated time
+                const now = new Date();
+                document.getElementById('last-updated').textContent = `Last updated: ${now.toLocaleString()}`;
+            } catch (error) {
+                console.error('Error fetching checkout logs:', error);
+                document.getElementById('loading-indicator').style.display = 'none';
+                document.getElementById('error-container').style.display = 'block';
+                document.getElementById('error-message').textContent = `Error loading checkout data: ${error.message}`;
+            }
+        }
+        
+        // Display country sections with checkout logs
+        function displayCountrySections(logsByCountry) {
+            const container = document.getElementById('countries-container');
+            container.innerHTML = '';
+            
+            // Sort countries alphabetically
+            const sortedCountries = Object.keys(logsByCountry).sort();
+            
+            sortedCountries.forEach(country => {
+                const logs = logsByCountry[country];
+                const countryFlag = countryFlags[country] || '🌍';
+                
+                // Create country section
+                const countrySection = document.createElement('div');
+                countrySection.className = 'country-section';
+                countrySection.innerHTML = `
+                    <div class="country-header">
+                        <h2>${countryFlag} ${country} (${logs.length})</h2>
+                    </div>
+                    <div class="row country-logs" id="country-${country.toLowerCase().replace(' ', '-')}">
+                        <!-- Logs will be inserted here -->
+                    </div>
+                `;
+                
+                container.appendChild(countrySection);
+                
+                // Add logs to country section
+                const logsContainer = document.getElementById(`country-${country.toLowerCase().replace(' ', '-')}`);
+                displayCheckoutLogs(logs, logsContainer);
+            });
+        }
+        
+        // Display checkout logs
+        function displayCheckoutLogs(logs, container) {
+            logs.forEach(log => {
+                // Fixed screenshot handling
+                let screenshotsHtml = '';
+                if (log.screenshots && log.screenshots.length > 0) {
+                    screenshotsHtml = '<div class="mt-3"><strong>Screenshots:</strong><div class="d-flex flex-wrap">';
+                    log.screenshots.forEach(screenshot => {
+                        // Use the correct path format based on what's available in the log
+                        let screenshotPath;
+                        
+                        // If screenshot is already a full path
+                        if (screenshot.includes('/')) {
+                            screenshotPath = `/screenshots/${screenshot}`;
+                        }
+                        // If we have country and opcode
+                        else if (log.country && log.opcode) {
+                            screenshotPath = `/screenshots/${log.country}/${log.opcode}/screenshots/${screenshot}`;
+                        }
+                        // If we have country and product_id
+                        else if (log.country && log.product_id) {
+                            screenshotPath = `/screenshots/${log.country}/${log.product_id}/${screenshot}`;
+                        }
+                        // Fallback
+                        else {
+                            screenshotPath = `/screenshots/${screenshot}`;
+                        }
+                        
+                        screenshotsHtml += `
+                            <img src="${screenshotPath}" 
+                                 class="screenshot-thumbnail" 
+                                 alt="${screenshot}"
+                                 onerror="this.onerror=null; this.src='/api/placeholder/100/75'; this.alt='Image not found'"
+                                 onclick="openScreenshotModal('${screenshotPath}', '${screenshot}')">
+                        `;
+                    });
+                    screenshotsHtml += '</div></div>';
+                }
+
+                const success = log.success === true;
+                const cardClass = success ? 'card-success' : 'card-failure';
+                
+                // Format timestamp for display
+                let displayTimestamp = log.timestamp || 'Unknown';
+                try {
+                    if (displayTimestamp.includes('_')) {
+                        const parts = displayTimestamp.split('_');
+                        if (parts.length >= 2) {
+                            const date = parts[0];
+                            const time = parts[1];
+                            displayTimestamp = `${date.substring(0, 4)}-${date.substring(4, 6)}-${date.substring(6, 8)} ${time.substring(0, 2)}:${time.substring(2, 4)}:${time.substring(4, 6)}`;
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error formatting timestamp:', e);
+                }
+                
+                // Use opcode if available, otherwise product ID
+                const productId = log.product_id || 'Unknown';
+                const opcode = log.opcode || productId;
+
+                const logCard = document.createElement('div');
+                logCard.className = 'col-md-6 col-lg-4 checkout-card';
+                logCard.setAttribute('data-product-id', productId);
+                logCard.setAttribute('data-opcode', opcode);
+                logCard.setAttribute('data-status', success ? 'success' : 'failure');
+
+                logCard.innerHTML = `
+                    <div class="card h-100 ${cardClass}">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Opcode: ${opcode}</h5>
+                            <span class="badge ${success ? 'bg-success' : 'bg-danger'}">
+                                ${success ? 'Success' : 'Failed'}
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">
+                                <strong>Product ID:</strong> ${productId}<br>
+                                <strong>Timestamp:</strong> ${displayTimestamp}<br>
+                                <strong>URL:</strong> <span class="text-truncate d-inline-block" style="max-width: 100%;">${log.url || 'N/A'}</span>
+                            </p>
+                            ${screenshotsHtml}
+                            <button class="btn btn-sm btn-outline-primary mt-3" onclick="viewLogDetails(${JSON.stringify(log).replace(/"/g, '&quot;')})">
+                                View Details
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(logCard);
+            });
+        }
+        
+        // Open screenshot modal
+        function openScreenshotModal(src, filename) {
+            document.getElementById('modal-screenshot').src = src;
+            document.getElementById('screenshotModalLabel').textContent = filename;
+            
+            // Add error handling for the modal image
+            document.getElementById('modal-screenshot').onerror = function() {
+                this.onerror = null;
+                this.src = '/api/placeholder/800/600';
+                this.alt = 'Image not found';
+            };
+            
+            const modal = new bootstrap.Modal(document.getElementById('screenshotModal'));
+            modal.show();
+        }
+        
+        // Display log details in modal
+        function viewLogDetails(log) {
+            const modalContent = document.getElementById('log-modal-content');
+            
+            let logContentHtml = '<div class="log-content">';
+            
+            if (log.content && Array.isArray(log.content)) {
+                logContentHtml += '<h6>Log Entries:</h6>';
+                
+                log.content.forEach(entry => {
+                    const entryType = entry.type || 'info';
+                    const cssClass = `log-${entryType}`;
+                    
+                    logContentHtml += `
+                        <div class="log-entry ${cssClass}">
+                            <strong>${entry.timestamp || ''}</strong>
+                            <span>${entry.message || ''}</span>
+                        </div>
+                    `;
+                });
+            } else {
+                logContentHtml += `<p>No detailed log content available</p>`;
+            }
+            
+            logContentHtml += '</div>';
+            
+            // Format timestamp for display
+            let displayTimestamp = log.timestamp || 'Unknown';
+            try {
+                if (displayTimestamp.includes('_')) {
+                    const parts = displayTimestamp.split('_');
+                    if (parts.length >= 2) {
+                        const date = parts[0];
+                        const time = parts[1];
+                        displayTimestamp = `${date.substring(0, 4)}-${date.substring(4, 6)}-${date.substring(6, 8)} ${time.substring(0, 2)}:${time.substring(2, 4)}:${time.substring(4, 6)}`;
+                    }
+                }
+            } catch (e) {
+                console.error('Error formatting timestamp:', e);
+            }
+            
+            // Use opcode if available, otherwise product ID
+            const productId = log.product_id || 'Unknown';
+            const opcode = log.opcode || productId;
+            
+            modalContent.innerHTML = `
+                <h6>Product ID: ${productId}</h6>
+                <h6>Opcode: ${opcode}</h6>
+                <h6>Status: <span class="badge ${log.success ? 'bg-success' : 'bg-danger'}">${log.success ? 'Success' : 'Failed'}</span></h6>
+                <h6>URL: ${log.url || 'N/A'}</h6>
+                <h6>Timestamp: ${displayTimestamp}</h6>
+                <hr>
+                ${logContentHtml}
+            `;
+            
+            const modal = new bootstrap.Modal(document.getElementById('logModal'));
+            modal.show();
+        }
+        
+        // Search functionality - include search by opcode
+        document.getElementById('search-input').addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const checkoutCards = document.querySelectorAll('.checkout-card');
+            
+            checkoutCards.forEach(card => {
+                const productId = card.getAttribute('data-product-id').toLowerCase();
+                const opcode = card.getAttribute('data-opcode').toLowerCase();
+                
+                if (productId.includes(searchTerm) || opcode.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+        
+        // Filter functionality
+        document.querySelectorAll('[data-filter]').forEach(button => {
+            button.addEventListener('click', function() {
+                // Update active button
+                document.querySelectorAll('[data-filter]').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                this.classList.add('active');
+                
+                const filter = this.getAttribute('data-filter');
+                const checkoutCards = document.querySelectorAll('.checkout-card');
+                
+                checkoutCards.forEach(card => {
+                    if (filter === 'all' || card.getAttribute('data-status') === filter) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        });
+        
+        // Add "go back to top" button
+        const backToTopBtn = document.createElement('button');
+        backToTopBtn.className = 'btn btn-primary position-fixed bottom-0 end-0 m-4';
+        backToTopBtn.style.zIndex = 1000;
+        backToTopBtn.innerHTML = '<i class="bi bi-arrow-up"></i>';
+        backToTopBtn.style.display = 'none';
+        backToTopBtn.onclick = () => window.scrollTo({top: 0, behavior: 'smooth'});
+        document.body.appendChild(backToTopBtn);
+        
+        // Show/hide back to top button
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                backToTopBtn.style.display = 'block';
+            } else {
+                backToTopBtn.style.display = 'none';
+            }
+        });
+        
+        // Initial load
+        fetchCheckoutLogs();
+        
+        // Refresh every 5 minutes
+        setInterval(fetchCheckoutLogs, 5 * 60 * 1000);
+    </script>
+</body>
+</html>
