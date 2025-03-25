@@ -426,20 +426,111 @@
         'Unknown': '🌍'
     };
 
-    // Fetch checkout logs from static sample data
-    async function fetchCheckoutLogs() {
+    // Fetch checkout logs
+    function fetchCheckoutLogs() {
         try {
             document.getElementById('loading-indicator').style.display = 'block';
             document.getElementById('error-container').style.display = 'none';
             document.getElementById('no-data-message').style.display = 'none';
             
-            // Load sample data from local file instead of making API call
-            const response = await fetch('sample-data.json');
-            if (!response.ok) {
-                throw new Error(`HTTP error ${response.status}: ${await response.text()}`);
-            }
+            // Sample data embedded directly in the code
+            const logs = [
+                {
+                    "country": "France",
+                    "product_id": "79723752",
+                    "opcode": "WMF152",
+                    "timestamp": "20250322_152830",
+                    "url": "https://www.veepee.fr/gr/catalog/123456",
+                    "success": true,
+                    "screenshots": ["sample1.png", "sample2.png"],
+                    "content": [
+                        {
+                            "message": "Successfully navigated to product page",
+                            "timestamp": "2025-03-22 15:28:30",
+                            "type": "success"
+                        },
+                        {
+                            "message": "Added product to cart",
+                            "timestamp": "2025-03-22 15:28:35",
+                            "type": "success"
+                        },
+                        {
+                            "message": "Completed checkout process",
+                            "timestamp": "2025-03-22 15:28:40",
+                            "type": "success"
+                        }
+                    ]
+                },
+                {
+                    "country": "Italy",
+                    "product_id": "80489948",
+                    "opcode": "WMF153",
+                    "timestamp": "20250322_160501",
+                    "url": "https://www.veepee.it/gr/catalog/654321",
+                    "success": false,
+                    "screenshots": ["sample3.png", "sample4.png"],
+                    "content": [
+                        {
+                            "message": "Successfully navigated to product page",
+                            "timestamp": "2025-03-22 16:05:01",
+                            "type": "success"
+                        },
+                        {
+                            "message": "Failed to add product to cart: Size not available",
+                            "timestamp": "2025-03-22 16:05:10",
+                            "type": "error"
+                        }
+                    ]
+                },
+                {
+                    "country": "Netherlands",
+                    "product_id": "79670918",
+                    "opcode": "WMF154",
+                    "timestamp": "20250323_054936",
+                    "url": "https://www.veepee.nl/gr/catalog/789012",
+                    "success": true,
+                    "screenshots": ["sample5.png", "sample6.png"],
+                    "content": [
+                        {
+                            "message": "Successfully navigated to product page",
+                            "timestamp": "2025-03-23 05:49:36",
+                            "type": "success"
+                        },
+                        {
+                            "message": "Added product to cart",
+                            "timestamp": "2025-03-23 05:49:45",
+                            "type": "success"
+                        },
+                        {
+                            "message": "Completed checkout process",
+                            "timestamp": "2025-03-23 05:50:10",
+                            "type": "success"
+                        }
+                    ]
+                },
+                {
+                    "country": "Luxembourg",
+                    "product_id": "80074925",
+                    "opcode": "WMF155",
+                    "timestamp": "20250323_062316",
+                    "url": "https://www.veepee.lu/gr/catalog/345678",
+                    "success": false,
+                    "screenshots": ["sample7.png", "sample8.png"],
+                    "content": [
+                        {
+                            "message": "Successfully navigated to product page",
+                            "timestamp": "2025-03-23 06:23:16",
+                            "type": "success"
+                        },
+                        {
+                            "message": "Failed at payment step: Invalid card information",
+                            "timestamp": "2025-03-23 06:24:30",
+                            "type": "error"
+                        }
+                    ]
+                }
+            ];
             
-            const logs = await response.json();
             console.log("Fetched logs:", logs.length);
             
             document.getElementById('loading-indicator').style.display = 'none';
@@ -510,26 +601,18 @@
     // Display checkout logs
     function displayCheckoutLogs(logs, container) {
         logs.forEach(log => {
-            // Enhanced screenshot handling with error fallback
+            // Fixed screenshot handling
             let screenshotsHtml = '';
             if (log.screenshots && log.screenshots.length > 0) {
                 screenshotsHtml = '<div class="mt-3"><strong>Screenshots:</strong><div class="d-flex flex-wrap">';
                 log.screenshots.forEach(screenshot => {
-                    // Improved screenshot path generation
-                    let screenshotPath;
-                    if (screenshot.includes('/')) {
-                        // If screenshot already contains a full path
-                        screenshotPath = screenshot;
-                    } else {
-                        // Construct path for simple filenames
-                        screenshotPath = `images/${log.country || 'Unknown'}/${screenshot}`;
-                    }
+                    // Use placeholders instead of real screenshots
+                    let screenshotPath = `https://via.placeholder.com/100x75?text=${screenshot}`;
                     
                     screenshotsHtml += `
                         <img src="${screenshotPath}" 
                              class="screenshot-thumbnail" 
                              alt="${screenshot}"
-                             onerror="this.onerror=null; this.src='https://via.placeholder.com/100x75?text=Image+Not+Found'; this.alt='Image not found'"
                              onclick="openScreenshotModal('${screenshotPath}', '${screenshot}')">
                     `;
                 });
