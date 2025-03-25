@@ -510,17 +510,26 @@
     // Display checkout logs
     function displayCheckoutLogs(logs, container) {
         logs.forEach(log => {
-            // Fixed screenshot handling
+            // Enhanced screenshot handling with error fallback
             let screenshotsHtml = '';
             if (log.screenshots && log.screenshots.length > 0) {
                 screenshotsHtml = '<div class="mt-3"><strong>Screenshots:</strong><div class="d-flex flex-wrap">';
                 log.screenshots.forEach(screenshot => {
-                    // Use placeholders instead of real screenshots
-                    let screenshotPath = `images/${log.country}/${screenshot}`;
+                    // Improved screenshot path generation
+                    let screenshotPath;
+                    if (screenshot.includes('/')) {
+                        // If screenshot already contains a full path
+                        screenshotPath = screenshot;
+                    } else {
+                        // Construct path for simple filenames
+                        screenshotPath = `images/${log.country || 'Unknown'}/${screenshot}`;
+                    }
+                    
                     screenshotsHtml += `
                         <img src="${screenshotPath}" 
                              class="screenshot-thumbnail" 
                              alt="${screenshot}"
+                             onerror="this.onerror=null; this.src='https://via.placeholder.com/100x75?text=Image+Not+Found'; this.alt='Image not found'"
                              onclick="openScreenshotModal('${screenshotPath}', '${screenshot}')">
                     `;
                 });
