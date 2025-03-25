@@ -272,7 +272,7 @@
         
         .btn-outline-success:hover, .btn-outline-success.active {
             background-color: var(--success-color);
-            border-color: var (--success-color);
+            border-color: var(--success-color);
         }
         
         .btn-outline-danger {
@@ -281,7 +281,7 @@
         }
         
         .btn-outline-danger:hover, .btn-outline-danger.active {
-            background-color: var (--danger-color);
+            background-color: var(--danger-color);
             border-color: var(--danger-color);
         }
         
@@ -534,13 +534,13 @@
 
                 const logHtml = `
                     <div class="col-md-4">
-                        <div class="card ${log.status === 'success' ? 'card-success' : 'card-failure'}">
+                        <div class="card ${log.success ? 'card-success' : 'card-failure'}">
                             <div class="card-header">
                                 <strong>${log.product_id || 'Unknown Product ID'}</strong>
                             </div>
                             <div class="card-body">
-                                <p><strong>Status:</strong> ${log.status}</p>
-                                <p><strong>Message:</strong> ${log.message}</p>
+                                <p><strong>Status:</strong> ${log.success ? 'Success' : 'Failure'}</p>
+                                <p><strong>Message:</strong> ${log.content[log.content.length - 1].message}</p>
                                 ${screenshotsHtml}
                                 <button class="btn btn-link p-0" data-bs-toggle="modal" data-bs-target="#logModal" onclick="showLogDetails(${log.id})">View Details</button>
                             </div>
@@ -565,16 +565,26 @@
             const modalContent = document.getElementById('log-modal-content');
             modalContent.innerHTML = `
                 <p><strong>Product ID:</strong> ${log.product_id || 'Unknown'}</p>
-                <p><strong>Status:</strong> ${log.status}</p>
-                <p><strong>Message:</strong> ${log.message}</p>
+                <p><strong>Status:</strong> ${log.success ? 'Success' : 'Failure'}</p>
+                <p><strong>Message:</strong> ${log.content[log.content.length - 1].message}</p>
                 <p><strong>Country:</strong> ${log.country || 'Unknown'}</p>
-                <p><strong>Opcode:</strong> ${log.opcode || 'Unknown'}</p>
                 <p><strong>Timestamp:</strong> ${log.timestamp || 'Unknown'}</p>
-                <p><strong>Additional Info:</strong> ${log.additional_info || 'None'}</p>
+                <p><strong>URL:</strong> <a href="${log.url}" target="_blank">${log.url}</a></p>
+                <div>
+                    <strong>Log Entries:</strong>
+                    <div class="d-flex flex-wrap">
+                        ${log.content.map(entry => `
+                            <div class="log-entry log-${entry.type}">
+                                <p><strong>${entry.timestamp}</strong></p>
+                                <p>${entry.message}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
                 <div>
                     <strong>Screenshots:</strong>
                     <div class="d-flex flex-wrap">
-                        ${(log.screenshots || []).map(s => `<img src="/screenshots/${screenshotPath}" class="screenshot-thumbnail" alt="Screenshot" onclick="showScreenshot('/screenshots/${screenshotPath}')">`).join('')}
+                        ${(log.screenshots || []).map(s => `<img src="/screenshots/${log.country}/${log.product_id}/${s}" class="screenshot-thumbnail" alt="Screenshot" onclick="showScreenshot('/screenshots/${log.country}/${log.product_id}/${s}')">`).join('')}
                     </div>
                 </div>
             `;
@@ -609,6 +619,41 @@
                 this.classList.add('active');
             });
         });
+
+        // Logs array (for testing purpose)
+        const logs = [
+            {
+                "country": "France",
+                "product_id": "874633",
+                "timestamp": "20250323_062335",
+                "url": "https://www.veepee.fr/gr/catalog/874633",
+                "success": true,
+                "content": [
+                    {
+                        "timestamp": "2025-03-23 06:22:59",
+                        "message": "Using URLs from file: /Users/user/Projects/ProProject/last-version/checkout/veepee_urls.txt",
+                        "type": "info"
+                    },
+                    {
+                        "timestamp": "2025-03-23 06:23:33",
+                        "message": "URL 1 processing complete. Automatically continuing to next URL...",
+                        "type": "info"
+                    }
+                ],
+                "screenshots": [
+                    "page_loaded_20250323_062312.png"
+                ]
+            },
+            {
+                "country": "Italy",
+                "product_id": "945621",
+                "timestamp": "20250323_070145",
+                "url": "https://www.veepee.it/gr/catalog/945621",
+                "success": false,
+                "content": [],
+                "screenshots": []
+            }
+        ];
 
         // Initial fetch of checkout logs
         fetchCheckoutLogs();
