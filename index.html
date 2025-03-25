@@ -559,37 +559,58 @@
             screenshotModal.show();
         }
 
-        // Show log details in modal
-        function showLogDetails(logId) {
-            const log = logs.find(l => l.id === logId);
+        // Display log details in modal
+        function viewLogDetails(log) {
             const modalContent = document.getElementById('log-modal-content');
-            modalContent.innerHTML = `
-                <p><strong>Product ID:</strong> ${log.product_id || 'Unknown'}</p>
-                <p><strong>Status:</strong> ${log.success ? 'Success' : 'Failure'}</p>
-                <p><strong>Message:</strong> ${log.content[log.content.length - 1].message}</p>
-                <p><strong>Country:</strong> ${log.country || 'Unknown'}</p>
-                <p><strong>Timestamp:</strong> ${log.timestamp || 'Unknown'}</p>
-                <p><strong>URL:</strong> <a href="${log.url}" target="_blank">${log.url}</a></p>
-                <div>
-                    <strong>Log Entries:</strong>
+            
+            // Create a more structured log details view
+            let logDetailsHtml = `
+                <h6><strong>Product ID:</strong> ${log.product_id}</h6>
+                <h6><strong>Status:</strong> <span class="badge ${log.success ? 'bg-success' : 'bg-danger'}">${log.success ? 'Success' : 'Failed'}</span></h6>
+                <h6><strong>Country:</strong> ${log.country || 'Unknown'}</h6>
+                <h6><strong>Timestamp:</strong> ${log.timestamp}</h6>
+                <h6><strong>URL:</strong> ${log.url || 'N/A'}</h6>
+                
+                <hr>
+                
+                <h6><strong>Log Entries:</strong></h6>
+            `;
+            
+            // Process log entries
+            if (log.content && Array.isArray(log.content)) {
+                log.content.forEach(entry => {
+                    logDetailsHtml += `
+                        <div class="log-entry">
+                            <strong>${entry.timestamp}</strong>
+                            <p>${entry.message}</p>
+                        </div>
+                    `;
+                });
+            } else {
+                logDetailsHtml += `<p>No log entries available</p>`;
+            }
+            
+            // Add screenshots section
+            if (log.screenshots && log.screenshots.length > 0) {
+                logDetailsHtml += `
+                    <hr>
+                    <h6><strong>Screenshots:</strong></h6>
                     <div class="d-flex flex-wrap">
-                        ${log.content.map(entry => `
-                            <div class="log-entry log-${entry.type}">
-                                <p><strong>${entry.timestamp}</strong></p>
-                                <p>${entry.message}</p>
-                            </div>
+                        ${log.screenshots.map(screenshot => `
+                            <img src="/screenshots/${screenshot}"
+                                 class="screenshot-thumbnail"
+                                 alt="${screenshot}"
+                                 onclick="openScreenshotModal('/screenshots/${screenshot}', '${screenshot}')"
+                            >
                         `).join('')}
                     </div>
-                </div>
-                <div>
-                    <strong>Screenshots:</strong>
-                    <div class="d-flex flex-wrap">
-                        ${(log.screenshots || []).map(s => `<img src="/screenshots/${log.country}/${log.product_id}/${s}" class="screenshot-thumbnail" alt="Screenshot" onclick="showScreenshot('/screenshots/${log.country}/${log.product_id}/${s}')">`).join('')}
-                    </div>
-                </div>
-            `;
-            const logModal = new bootstrap.Modal(document.getElementById('logModal'));
-            logModal.show();
+                `;
+            }
+            
+            modalContent.innerHTML = logDetailsHtml;
+            
+            const modal = new bootstrap.Modal(document.getElementById('logModal'));
+            modal.show();
         }
 
         // Search and filter functionality
