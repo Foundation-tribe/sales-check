@@ -129,7 +129,7 @@
             left: 0;
             width: 60px;
             height: 2px;
-            background: linear-gradient(135deg, var (--primary-color) 0%, var(--secondary-color) 100%);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
         }
         
         .checkout-card {
@@ -272,7 +272,7 @@
         
         .btn-outline-success:hover, .btn-outline-success.active {
             background-color: var(--success-color);
-            border-color: var(--success-color);
+            border-color: var (--success-color);
         }
         
         .btn-outline-danger {
@@ -281,7 +281,7 @@
         }
         
         .btn-outline-danger:hover, .btn-outline-danger.active {
-            background-color: var(--danger-color);
+            background-color: var (--danger-color);
             border-color: var(--danger-color);
         }
         
@@ -522,4 +522,96 @@
                         else if (log.country && log.product_id) {
                             screenshotPath = `/screenshots/${log.country}/${log.product_id}/${screenshot}`;
                         }
-                        // F
+                        // Fallback
+                        else {
+                            screenshotPath = `/screenshots/${screenshot}`;
+                        }
+                        
+                        screenshotsHtml += `<img src="${screenshotPath}" class="screenshot-thumbnail" alt="Screenshot" onclick="showScreenshot('${screenshotPath}')">`;
+                    });
+                    screenshotsHtml += '</div></div>';
+                }
+
+                const logHtml = `
+                    <div class="col-md-4">
+                        <div class="card ${log.status === 'success' ? 'card-success' : 'card-failure'}">
+                            <div class="card-header">
+                                <strong>${log.product_id || 'Unknown Product ID'}</strong>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Status:</strong> ${log.status}</p>
+                                <p><strong>Message:</strong> ${log.message}</p>
+                                ${screenshotsHtml}
+                                <button class="btn btn-link p-0" data-bs-toggle="modal" data-bs-target="#logModal" onclick="showLogDetails(${log.id})">View Details</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                container.innerHTML += logHtml;
+            });
+        }
+
+        // Show screenshot in modal
+        function showScreenshot(path) {
+            document.getElementById('modal-screenshot').src = path;
+            const screenshotModal = new bootstrap.Modal(document.getElementById('screenshotModal'));
+            screenshotModal.show();
+        }
+
+        // Show log details in modal
+        function showLogDetails(logId) {
+            const log = logs.find(l => l.id === logId);
+            const modalContent = document.getElementById('log-modal-content');
+            modalContent.innerHTML = `
+                <p><strong>Product ID:</strong> ${log.product_id || 'Unknown'}</p>
+                <p><strong>Status:</strong> ${log.status}</p>
+                <p><strong>Message:</strong> ${log.message}</p>
+                <p><strong>Country:</strong> ${log.country || 'Unknown'}</p>
+                <p><strong>Opcode:</strong> ${log.opcode || 'Unknown'}</p>
+                <p><strong>Timestamp:</strong> ${log.timestamp || 'Unknown'}</p>
+                <p><strong>Additional Info:</strong> ${log.additional_info || 'None'}</p>
+                <div>
+                    <strong>Screenshots:</strong>
+                    <div class="d-flex flex-wrap">
+                        ${(log.screenshots || []).map(s => `<img src="/screenshots/${screenshotPath}" class="screenshot-thumbnail" alt="Screenshot" onclick="showScreenshot('/screenshots/${screenshotPath}')">`).join('')}
+                    </div>
+                </div>
+            `;
+            const logModal = new bootstrap.Modal(document.getElementById('logModal'));
+            logModal.show();
+        }
+
+        // Search and filter functionality
+        document.getElementById('search-input').addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            document.querySelectorAll('.checkout-card').forEach(card => {
+                const productId = card.querySelector('.card-header strong').textContent.toLowerCase();
+                if (productId.includes(query)) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        document.querySelectorAll('.btn-group button').forEach(button => {
+            button.addEventListener('click', function() {
+                const filter = this.getAttribute('data-filter');
+                document.querySelectorAll('.checkout-card').forEach(card => {
+                    if (filter === 'all' || card.classList.contains(`card-${filter}`)) {
+                        card.style.display = '';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+                document.querySelectorAll('.btn-group button').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Initial fetch of checkout logs
+        fetchCheckoutLogs();
+    </script>
+</body>
+</html>
