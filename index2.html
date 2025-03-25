@@ -516,8 +516,7 @@
                 screenshotsHtml = '<div class="mt-3"><strong>Screenshots:</strong><div class="d-flex flex-wrap">';
                 log.screenshots.forEach(screenshot => {
                     // Use placeholders instead of real screenshots
-                    let screenshotPath = `https://via.placeholder.com/100x75?text=${screenshot}`;
-                    
+                    let screenshotPath = `images/${log.country}/${screenshot}`;
                     screenshotsHtml += `
                         <img src="${screenshotPath}" 
                              class="screenshot-thumbnail" 
